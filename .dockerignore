@@ -1,0 +1,12 @@
+.env
+.greennode.json
+.agentbase/
+*.credentials.json
+greennode-agentbase-skills/
+.git/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+BaoCao_*.docx

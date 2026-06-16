@@ -1,0 +1,35 @@
+agent:
+  name: "ZION Contract Review"
+  version: "1.0.0"
+  description: "AI agent rà soát và so sánh hai hợp đồng, xuất báo cáo tiếng Việt"
+
+llm:
+  provider: "google"
+  model: "gemini-2.0-flash"
+  api_key_env: "GEMINI_API_KEY"
+  temperature: 0.2
+  max_output_tokens: 8192
+
+input:
+  supported_formats:
+    - ".docx"
+    - ".pdf"
+
+output:
+  format: "docx"
+  language: "vi"
+  filename_prefix: "BaoCao_RaSoatHopDong"
+
+review:
+  sections:
+    - "Thông tin cơ bản hợp đồng"
+    - "Các bên tham gia"
+    - "Đối tượng và phạm vi hợp đồng"
+    - "Giá trị và điều khoản thanh toán"
+    - "Thời hạn hợp đồng"
+    - "Quyền và nghĩa vụ các bên"
+    - "Điều khoản phạt và bồi thường"
+    - "Điều khoản chấm dứt hợp đồng"
+    - "Giải quyết tranh chấp"
+    - "Điểm khác biệt giữa hai hợp đồng"
+    - "Rủi ro pháp lý và khuyến nghị"
