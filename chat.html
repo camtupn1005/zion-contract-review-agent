@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>ZION Contract Review Agent</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: #eee; }
+  h1 { color: #4CAF50; text-align: center; }
+  #chat-box { background: #16213e; border-radius: 10px; padding: 20px; height: 500px; overflow-y: auto; margin-bottom: 15px; }
+  .user-msg { background: #0f3460; padding: 10px; border-radius: 8px; margin: 8px 0; text-align: right; }
+  .agent-msg { background: #1F3864; padding: 10px; border-radius: 8px; margin: 8px 0; white-space: pre-wrap; }
+  #input-area { display: flex; gap: 10px; }
+  #user-input { flex: 1; padding: 12px; border-radius: 8px; border: none; background: #16213e; color: #eee; font-size: 15px; }
+  #send-btn { padding: 12px 24px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; }
+  #send-btn:hover { background: #45a049; }
+  #upload-area { display: flex; gap: 10px; margin-bottom: 15px; }
+  .upload-btn { padding: 10px 16px; background: #0f3460; color: #eee; border: 1px solid #4CAF50; border-radius: 8px; cursor: pointer; }
+  #status { color: #4CAF50; font-size: 13px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<h1>⚖️ ZION Contract Review Agent</h1>
+<div id="status">● Agent sẵn sàng</div>
+<div id="upload-area">
+  <label class="upload-btn">📄 Upload File Chuẩn <input type="file" id="file-chuan" accept=".docx,.pdf" hidden></label>
+  <label class="upload-btn">📝 Upload File Cần Check <input type="file" id="file-check" accept=".docx,.pdf" hidden></label>
+  <button class="upload-btn" onclick="startReview()">🔍 Bắt đầu Review</button>
+</div>
+<div id="file-status" style="margin-bottom:10px; color:#aaa; font-size:13px;"></div>
+<div id="chat-box"></div>
+<div id="input-area">
+  <input type="text" id="user-input" placeholder="Nhập câu hỏi hoặc yêu cầu..." onkeypress="if(event.key==='Enter') sendMessage()">
+  <button id="send-btn" onclick="sendMessage()">Gửi</button>
+</div>
+
+<script>
+const ENDPOINT = "https://endpoint-c58046e0-a013-4319-861a-641cd53bb952.agentbase-runtime.aiplatform.vngcloud.vn";
+const messages = [];
+
+document.getElementById('file-chuan').onchange = function() {
+  document.getElementById('file-status').innerHTML += `✅ File chuẩn: ${this.files[0].name}<br>`;
+};
+document.getElementById('file-check').onchange = function() {
+  document.getElementById('file-status').innerHTML += `✅ File cần check: ${this.files[0].name}<br>`;
+};
+
+async function startReview() {
+  const fileChuan = document.getElementById('file-chuan').files[0];
+  const fileCheck = document.getElementById('file-check').files[0];
+  if (!fileChuan || !fileCheck) { alert('Vui lòng upload đủ File Chuẩn và File Cần Check'); return; }
+  addMessage('user', `Đã upload:\n- File chuẩn: ${fileChuan.name}\n- File cần check: ${fileCheck.name}\nBắt đầu review...`);
+  await sendToAgent(`Tôi cần review hợp đồng. File chuẩn: ${fileChuan.name}. File cần check: ${fileCheck.name}. Hãy bắt đầu quy trình Pre-flight Check và rà soát theo đúng quy trình.`);
+}
+
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = role === 'user' ? 'user-msg' : 'agent-msg';
+  div.textContent = text;
+  document.getElementById('chat-box').appendChild(div);
+  document.getElementById('chat-box').scrollTop = 999999;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMessage('user', text);
+  await sendToAgent(text);
+}
+
+async function sendToAgent(text) {
+  messages.push({ role: 'user', content: text });
+  addMessage('agent', '⏳ Đang xử lý...');
+  try {
+    const res = await fetch(`${ENDPOINT}/v1/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, stream: false })
+    });
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || data.response || JSON.stringify(data);
+    document.getElementById('chat-box').lastChild.remove();
+    addMessage('agent', reply);
+    messages.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    document.getElementById('chat-box').lastChild.remove();
+    addMessage('agent', '❌ Lỗi kết nối: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
